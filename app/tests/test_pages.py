@@ -1,5 +1,8 @@
 import os
 import sys
+
+# When tests are run separately, Python doesn't recognize the other files in the package
+# The lines below adds the projects base directory to path to work around this
 projectdir = os.path.abspath(os.path.dirname(os.path.join('..', '..', "..")))
 sys.path.append(projectdir)
 
