@@ -53,8 +53,15 @@ def product_movement():
 
 
 @app.route('/product/<name>')
-def post(name):
+def view_product(name):
     product = models.Product.query.filter(models.Product.name == name).first()
     if product:
         return "{}".format(product)
+
+
+@app.route('/location/<name>')
+def view_location(name):
+    location = models.Location.query.filter(models.Location.name == name).first()
+    if location:
+        return "{}".format(location)
 
