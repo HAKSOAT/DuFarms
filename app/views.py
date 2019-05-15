@@ -57,6 +57,8 @@ def view_product(name):
     product = models.Product.query.filter(models.Product.name == name).first()
     if product:
         return "{}".format(product)
+    else:
+        abort(404)
 
 
 @app.route('/location/<name>')
@@ -64,4 +66,10 @@ def view_location(name):
     location = models.Location.query.filter(models.Location.name == name).first()
     if location:
         return "{}".format(location)
+    else:
+        abort(404)
 
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return "Not Found", 404
