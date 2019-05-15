@@ -1,5 +1,5 @@
 from app import app, models
-from flask import request
+from flask import abort, request
 from app.forms import AddForm, ProductMovementForm
 
 
@@ -50,3 +50,11 @@ def product_movement():
         models.db.session.add(movement)
         models.db.session.commit()
     return "Add Location"
+
+
+@app.route('/product/<name>')
+def post(name):
+    product = models.Product.query.filter(models.Product.name == name).first()
+    if product:
+        return "{}".format(product)
+
