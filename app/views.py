@@ -30,6 +30,41 @@ def add_product():
     return "Add Product"
 
 
+@app.route("/products/<name>/edit", methods=["GET", "POST"])
+def edit_product(name):
+    """
+    Edit information on the requested product
+    :param name:
+    :return: product info page
+    """
+    product = models.Product.query.filter(func.lower(models.Product.name) == func.lower(name)).first()
+    if product:
+        form = AddForm(form_name="Edit Product", submit="Edit", obj=product)
+        if request.method == "POST" and form.validate_on_submit():
+            product.name = form.name.data
+            product.description = form.description.data
+            models.db.session.commit()
+        return "{}".format(product)
+    else:
+        abort(404)
+
+
+@app.route('/products/<name>')
+def view_product(name):
+    """
+    Display information on the requested product
+    :param name:
+    :return: product info page
+    """
+    # Query the database for a product that matches the inputted value
+    # func.lower helps with finding the right matches regardless of the case used
+    product = models.Product.query.filter(func.lower(models.Product.name) == func.lower(name)).first()
+    if product:
+        return "{}".format(product)
+    else:
+        abort(404)
+
+
 @app.route("/locations")
 def locations():
     return "Locations"
@@ -49,6 +84,34 @@ def add_location():
         models.db.session.add(location)
         models.db.session.commit()
     return "Add Location"
+
+
+@app.route('/locations/<name>')
+def view_location(name):
+    """
+    Display information on the requested location
+    :param name:
+    :return: location info page
+    """
+    # Query the database for a location that matches the inputted value
+    # func.lower helps with finding the right matches regardless of the case used
+    location = models.Location.query.filter(func.lower(models.Location.name) == func.lower(name)).first()
+    # Ensure that location being requested for is in the database
+    if location:
+        products = models.Product.query.all()
+        report = {}
+        # Fetch the quantity remaining for each product in the provided location
+        for product in products:
+            incoming = models.db.session.query(func.sum(models.ProductMovement.qty)).filter(
+                models.ProductMovement.to_location == location.id).filter(
+                models.ProductMovement.product_id == product.id).scalar()
+            outgoing = models.db.session.query(func.sum(models.ProductMovement.qty)).filter(
+                models.ProductMovement.from_location == location.id).filter(
+                models.ProductMovement.product_id == product.id).scalar()
+            report[product.name] = incoming - outgoing
+        return "{}".format(report)
+    else:
+        abort(404)
 
 
 @app.route("/product_movement", methods=["GET", "POST"])
@@ -88,50 +151,6 @@ def product_movement():
         models.db.session.add(movement)
         models.db.session.commit()
     return "Add Location"
-
-
-@app.route('/products/<name>')
-def view_product(name):
-    """
-    Display information on the requested product
-    :param name:
-    :return: product info page
-    """
-    # Query the database for a product that matches the inputted value
-    # func.lower helps with finding the right matches regardless of the case used
-    product = models.Product.query.filter(func.lower(models.Product.name) == func.lower(name)).first()
-    if product:
-        return "{}".format(product)
-    else:
-        abort(404)
-
-
-@app.route('/locations/<name>')
-def view_location(name):
-    """
-    Display information on the requested location
-    :param name:
-    :return: location info page
-    """
-    # Query the database for a location that matches the inputted value
-    # func.lower helps with finding the right matches regardless of the case used
-    location = models.Location.query.filter(func.lower(models.Location.name) == func.lower(name)).first()
-    # Ensure that location being requested for is in the database
-    if location:
-        products = models.Product.query.all()
-        report = {}
-        # Fetch the quantity remaining for each product in the provided location
-        for product in products:
-            incoming = models.db.session.query(func.sum(models.ProductMovement.qty)).filter(
-                models.ProductMovement.to_location == location.id).filter(
-                models.ProductMovement.product_id == product.id).scalar()
-            outgoing = models.db.session.query(func.sum(models.ProductMovement.qty)).filter(
-                models.ProductMovement.from_location == location.id).filter(
-                models.ProductMovement.product_id == product.id).scalar()
-            report[product.name] = incoming - outgoing
-        return "{}".format(report)
-    else:
-        abort(404)
 
 
 @app.errorhandler(404)
