@@ -28,6 +28,7 @@ class ProductMovement(db.Model):
     __tablename__ = "ProductMovement"
     id = db.Column(db.Integer, primary_key=True)
     timestamp = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    description = db.Column(db.String)
     from_location = db.Column(db.Integer, db.ForeignKey('location.id'))
     to_location = db.Column(db.Integer, db.ForeignKey('location.id'))
     product_id = db.Column(db.Integer, db.ForeignKey('product.id'))
