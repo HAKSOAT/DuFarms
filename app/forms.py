@@ -13,8 +13,8 @@ class AddForm(FlaskForm):
 class ProductMovementForm(FlaskForm):
     form_name = HiddenField('Form Name')
     product = SelectField('Product:', coerce=int, validators=[DataRequired()])
-    description = StringField("Description")
-    from_location = SelectField('From:', coerce=int)
-    to_location = SelectField('To:', coerce=int)
-    qty = IntegerField("Quantity")
+    description = StringField("Description", validators=[DataRequired()])
+    from_location = SelectField('From:', coerce=int, validators=[DataRequired()])
+    to_location = SelectField('To:', coerce=int, validators=[DataRequired()])
+    qty = IntegerField("Quantity", validators=[DataRequired()])
     submit = SubmitField('Move Product')
