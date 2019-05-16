@@ -16,6 +16,12 @@ def products():
 
 @app.route("/products/add", methods=["GET", "POST"])
 def add_product():
+    """
+    Receive product name and description from form
+    Add to database
+    Redirect to product listings page
+    :return: add products page for GET requests
+    """
     form = AddForm(form_name="Add Product")
     if request.method == "POST" and form.validate_on_submit():
         product = models.Product(name=form.name.data, description=form.description.data)
@@ -31,6 +37,12 @@ def locations():
 
 @app.route("/locations/add", methods=["GET", "POST"])
 def add_location():
+    """
+    Receive location name and description from form
+    Add to database
+    Redirect to location listings page
+    :return: add locations page for GET requests
+    """
     form = AddForm(form_name="Add Location")
     if request.method == "POST" and form.validate_on_submit():
         location = models.Location(name=form.name.data, description=form.description.data)
@@ -41,6 +53,10 @@ def add_location():
 
 @app.route("/product_movement", methods=["GET", "POST"])
 def product_movement():
+    """
+    Move product between created locations
+    :return: product_movement page
+    """
     form = ProductMovementForm(form_name="Product Movement")
     # Create a dynamic select list for the forms
     # The first value in the tuple is returned by the form if selected
@@ -49,6 +65,9 @@ def product_movement():
     form.from_location.choices = [(location.id, location.name) for location in models.Location.query.all()]
     form.to_location.choices = [(location.id, location.name) for location in models.Location.query.all()]
     if request.method == "POST" and form.validate_on_submit():
+        # Ensure that products cannot be moved more than available
+        # Example: Requests to move 5 quantities if there are only 3 are to be rejected
+        # Except in cases where the product is coming from Abroad
         abroad = 1
         if form.from_location.data != abroad:
             incoming = models.db.session.query(func.sum(models.ProductMovement.qty)).filter(
@@ -73,6 +92,11 @@ def product_movement():
 
 @app.route('/products/<name>')
 def view_product(name):
+    """
+    Display information on the requested product
+    :param name:
+    :return: product info page
+    """
     # Query the database for a product that matches the inputted value
     # func.lower helps with finding the right matches regardless of the case used
     product = models.Product.query.filter(func.lower(models.Product.name) == func.lower(name)).first()
@@ -84,17 +108,26 @@ def view_product(name):
 
 @app.route('/locations/<name>')
 def view_location(name):
+    """
+    Display information on the requested location
+    :param name:
+    :return: location info page
+    """
     # Query the database for a location that matches the inputted value
     # func.lower helps with finding the right matches regardless of the case used
     location = models.Location.query.filter(func.lower(models.Location.name) == func.lower(name)).first()
+    # Ensure that location being requested for is in the database
     if location:
         products = models.Product.query.all()
         report = {}
+        # Fetch the quantity remaining for each product in the provided location
         for product in products:
             incoming = models.db.session.query(func.sum(models.ProductMovement.qty)).filter(
-                models.ProductMovement.to_location == location.id).filter(models.ProductMovement.product_id == product.id).scalar()
+                models.ProductMovement.to_location == location.id).filter(
+                models.ProductMovement.product_id == product.id).scalar()
             outgoing = models.db.session.query(func.sum(models.ProductMovement.qty)).filter(
-                models.ProductMovement.from_location == location.id).filter(models.ProductMovement.product_id == product.id).scalar()
+                models.ProductMovement.from_location == location.id).filter(
+                models.ProductMovement.product_id == product.id).scalar()
             report[product.name] = incoming - outgoing
         return "{}".format(report)
     else:
