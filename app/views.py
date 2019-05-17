@@ -33,7 +33,8 @@ def add_product():
             models.db.session.commit()
         except sa.exc.IntegrityError:
             return "Error"
-    return "Add Product"
+    page_title = "DuFarms - Add Product"
+    return render_template("add.html", page_title=page_title, form=form)
 
 
 @app.route("/products/<name>/edit", methods=["GET", "POST"])
@@ -54,7 +55,8 @@ def edit_product(name):
                 models.db.session.commit()
             except sa.exc.IntegrityError:
                 return "Error"
-        return "{}".format(product)
+        page_title = "DuFarms - Edit Product"
+        return render_template("add.html", page_title=page_title, form=form)
     else:
         abort(404)
 
@@ -98,7 +100,8 @@ def add_location():
             models.db.session.commit()
         except sa.exc.IntegrityError:
             return "Error"
-    return "Add Location"
+    page_title = "DuFarms - Add Location"
+    return render_template("add.html", page_title=page_title, form=form)
 
 
 @app.route("/locations/<name>/edit", methods=["GET", "POST"])
@@ -119,7 +122,8 @@ def edit_location(name):
                 models.db.session.commit()
             except sa.exc.IntegrityError:
                 return "Error"
-        return "{}".format(location)
+        page_title = "DuFarms - Edit Location"
+        return render_template("add.html", page_title=page_title, form=form)
     else:
         abort(404)
 
@@ -156,11 +160,11 @@ def view_location(name):
         abort(404)
 
 
-@app.route("/product_movement", methods=["GET", "POST"])
-def product_movement():
+@app.route("/product_movements", methods=["GET", "POST"])
+def product_movements():
     """
     Move product between created locations
-    :return: product_movement page
+    :return: product_movements page
     """
     form = ProductMovementForm(form_name="Product Movement")
     # Create a dynamic select list for the forms
@@ -193,7 +197,7 @@ def product_movement():
         models.db.session.add(movement)
         models.db.session.commit()
     page_title = "DuFarms - Movement"
-    return render_template("movement.html", page_title=page_title, form=form)
+    return render_template("movements.html", page_title=page_title, form=form)
 
 
 @app.errorhandler(404)

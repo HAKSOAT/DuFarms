@@ -29,21 +29,16 @@ class TestCase(unittest.TestCase):
             models.db.drop_all()
 
     def test_home_page(self):
-        result = self.app.get("/")
-        self.assertEqual(result.status_code, 200)
+        response = self.app.get("/")
+        self.assertEqual(response.status_code, 200)
 
     def test_products_page(self):
-        result = self.app.get("/products")
-        self.assertEqual(result.status_code, 200)
+        response = self.app.get("/products")
+        self.assertEqual(response.status_code, 200)
 
     def test_add_products_page(self):
-        result = self.app.get("/products/add")
-        self.assertEqual(result.status_code, 200)
-
-    def test_view_product_page(self):
-        self.app.post("/products/add", data={"name": "Garri", "description": "Also known as cassava flakes"})
-        result = self.app.get("products/garri")
-        self.assertEqual(result.status_code, 200)
+        response = self.app.get("/products/add")
+        self.assertEqual(response.status_code, 200)
 
     def test_products_can_be_added(self):
         self.app.post("/products/add", data={"name": "Garri", "description": "Also known as cassava flakes"})
@@ -51,9 +46,41 @@ class TestCase(unittest.TestCase):
             result = models.Product.query.filter(models.Product.name == "Garri").first()
             self.assertEqual(result.description, "Also known as cassava flakes")
 
+    def test_add_existing_product(self):
+        self.app.post("/products/add", data={"name": "Garri", "description": "Also known as cassava flakes"})
+        response = self.app.post("/products/add", data={"name": "Garri", "description": "Also known as cassava flakes"})
+        self.assertEqual(response.data, b"Error")
+
+    def test_edit_products_page(self):
+        self.app.post("/products/add", data={"name": "Garri", "description": "Also known as cassava flakes"})
+        response = self.app.get("/products/garri/edit")
+        self.assertEqual(response.status_code, 200)
+
+    def test_product_can_be_edited(self):
+        self.app.post("/products/add", data={"name": "Garri", "description": "Also known as cassava flakes"})
+        self.app.post("/products/garri/edit", data={"name": "Garri", "description": "Can be used for Eba"})
+        with app.app_context():
+            result = models.Product.query.filter(models.Product.name == "Garri").first()
+            self.assertEqual(result.description, "Can be used for Eba")
+
+    def test_edit_add_existing_product(self):
+        self.app.post("/products/add", data={"name": "Rice", "description": "Oryza Sativa"})
+        self.app.post("/products/add", data={"name": "Garri", "description": "Also known as cassava flakes"})
+        response = self.app.post("/products/garri/edit", data={"name": "Rice", "description": "Oryza Sativa"})
+        self.assertEqual(response.data, b"Error")
+
+    def test_view_product_page(self):
+        self.app.post("/products/add", data={"name": "Garri", "description": "Also known as cassava flakes"})
+        response = self.app.get("/products/garri")
+        self.assertEqual(response.status_code, 200)
+
+    def test_view_false_product_page(self):
+        response = self.app.get("/products/Another")
+        self.assertEqual(response.status_code, 404)
+
     def test_locations_page(self):
-        result = self.app.get("/locations")
-        self.assertEqual(result.status_code, 200)
+        response = self.app.get("/locations")
+        self.assertEqual(response.status_code, 200)
 
     def test_location_can_be_added(self):
         self.app.post("/locations/add", data={"name": "Lagos", "description": "Economic Capital of Nigeria"})
@@ -61,14 +88,41 @@ class TestCase(unittest.TestCase):
             result = models.Location.query.filter(models.Location.name == "Lagos").first()
             self.assertEqual(result.description, "Economic Capital of Nigeria")
 
+    def test_add_existing_location(self):
+        self.app.post("/locations/add", data={"name": "Lagos", "description": "Economic Capital of Nigeria"})
+        response = self.app.post("/locations/add", data={"name": "Lagos", "description": "Economic Capital of Nigeria"})
+        self.assertEqual(response.data, b"Error")
+
+    def test_edit_locations_page(self):
+        self.app.post("/locations/add", data={"name": "Lagos", "description": "Economic Capital of Nigeria"})
+        response = self.app.get("/locations/lagos/edit")
+        self.assertEqual(response.status_code, 200)
+
+    def test_locations_can_be_edited(self):
+        self.app.post("/locations/add", data={"name": "Lagos", "description": "Economic Capital of Nigeria"})
+        self.app.post("/locations/lagos/edit", data={"name": "Lagos", "description": "I no sabi Lagos"})
+        with app.app_context():
+            result = models.Location.query.filter(models.Location.name == "Lagos").first()
+            self.assertEqual(result.description, "I no sabi Lagos")
+
+    def test_edit_add_existing_location(self):
+        self.app.post("/locations/add", data={"name": "Ibadan", "description": "Largest West Africa"})
+        self.app.post("/locations/add", data={"name": "Lagos", "description": "Economic Capital of Nigeria"})
+        response = self.app.post("/locations/lagos/edit", data={"name": "Ibadan", "description": "Largest West Africa"})
+        self.assertEqual(response.data, b"Error")
+
     def test_view_location_page(self):
         self.app.post("/locations/add", data={"name": "Lagos", "description": "Economic Capital of Nigeria"})
-        result = self.app.get("/locations/lagos")
-        self.assertEqual(result.status_code, 200)
+        response = self.app.get("/locations/lagos")
+        self.assertEqual(response.status_code, 200)
+
+    def test_view_false_location_page(self):
+        response = self.app.get("/locations/Another")
+        self.assertEqual(response.status_code, 404)
 
     def test_movements(self):
-        result = self.app.get("/product_movement")
-        self.assertEqual(result.status_code, 200)
+        response = self.app.get("/product_movement")
+        self.assertEqual(response.status_code, 200)
 
     def test_movements_can_be_made(self):
         product_name = "Garri"
@@ -81,35 +135,11 @@ class TestCase(unittest.TestCase):
             location_result = models.Location.query.filter(models.Location.name == location_name).first()
             location_id = location_result.id
         quantity = 10
-        self.app.post("/product_movement", data={"to_location": location_id, "from_location": 1, "qty": quantity,
+        self.app.post("/product_movements", data={"to_location": location_id, "from_location": 1, "qty": quantity,
                                                  "description": "I need to move", "product": product_id})
         with app.app_context():
             mov_result = models.ProductMovement.query.filter(models.ProductMovement.product_id == product_id).first()
             self.assertEqual(mov_result.qty, quantity)
-
-    def test_existing_product_page(self):
-        product_name = "Garri"
-        self.app.post("/products/add", data={"name": product_name, "description": "Also known as cassava flakes"})
-        request = self.app.get("/products/{}".format(product_name))
-        self.assertEqual(request.status_code, 200)
-
-    def test_nonexisting_product_page(self):
-        product_name = "Garri"
-        self.app.post("/products/add", data={"name": product_name, "description": "Also known as cassava flakes"})
-        request = self.app.get("/products/{}".format("Another"))
-        self.assertEqual(request.status_code, 404)
-
-    def test_existing_location_page(self):
-        location_name = "Lagos"
-        self.app.post("/locations/add", data={"name": location_name, "description": "Also known as cassava flakes"})
-        request = self.app.get("/locations/{}".format(location_name))
-        self.assertEqual(request.status_code, 200)
-
-    def test_nonexisting_location_page(self):
-        location_name = "Lagos"
-        self.app.post("/locations/add", data={"name": location_name, "description": "Also known as cassava flakes"})
-        request = self.app.get("/locations/{}".format("Another"))
-        self.assertEqual(request.status_code, 404)
 
     def test_location_count(self):
         product_name = "Garri"
@@ -123,13 +153,13 @@ class TestCase(unittest.TestCase):
             location_result = models.Location.query.filter(models.Location.name == location_name).first()
             location_id = location_result.id
         quantity = 10
-        self.app.post("/product_movement", data={"to_location": location_id, "from_location": 1, "qty": quantity,
+        self.app.post("/product_movements", data={"to_location": location_id, "from_location": 1, "qty": quantity,
                                                  "description": "I need to move", "product": product_id})
 
-        self.app.post("/product_movement", data={"to_location": 3, "from_location": 2, "qty": 5,
-                                                 "product": product_id})
-        report = self.app.get("/locations/{}".format(location_name))
-        self.assertEqual(report.data, b"{'Garri': 5}")
+        self.app.post("/product_movements", data={"to_location": 3, "from_location": 2, "qty": 5,
+                                                 "description": "I need to move too", "product": product_id})
+        response = self.app.get("/locations/{}".format(location_name))
+        self.assertEqual(response.data, b"{'Garri': 5}")
 
     def test_movements_impossible_quantity_size(self):
         product_name = "Garri"
@@ -143,12 +173,12 @@ class TestCase(unittest.TestCase):
             location_result = models.Location.query.filter(models.Location.name == location_name).first()
             location_id = location_result.id
         quantity = 10
-        self.app.post("/product_movement", data={"to_location": location_id, "from_location": 1, "qty": quantity,
+        self.app.post("/product_movements", data={"to_location": location_id, "from_location": 1, "qty": quantity,
                                                  "description": "I need to move", "product": product_id})
 
-        result = self.app.post("/product_movement", data={"to_location": 3, "from_location": 2, "qty": 15,
-                                                          "description": "I need to move", "product": product_id})
-        self.assertEqual(result.data, b"Error")
+        response = self.app.post("/product_movements", data={"to_location": 3, "from_location": 2, "qty": 15,
+                                                            "description": "I need to move", "product": product_id})
+        self.assertEqual(response.data, b"Error")
 
 
 if __name__ == '__main__':
