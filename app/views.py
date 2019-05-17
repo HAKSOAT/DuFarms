@@ -1,17 +1,19 @@
 from app import app, models
-from flask import abort, request
-import sqlalchemy as sa
 from app.forms import AddForm, ProductMovementForm
+from flask import abort, request, render_template
+import sqlalchemy as sa
 
 
 @app.route("/")
 def home():
-    return "Home"
+    page_title = "DuFarms - Home"
+    return render_template("home.html", page_title=page_title)
 
 
 @app.route("/products")
 def products():
-    return "Products"
+    page_title = "DuFarms - Products"
+    return render_template("products.html", page_title=page_title)
 
 
 @app.route("/products/add", methods=["GET", "POST"])
@@ -75,7 +77,8 @@ def view_product(name):
 
 @app.route("/locations")
 def locations():
-    return "Locations"
+    page_title = "DuFarms - Locations"
+    return render_template("locations.html", page_title=page_title)
 
 
 @app.route("/locations/add", methods=["GET", "POST"])
@@ -189,7 +192,8 @@ def product_movement():
                                           product_id=form.product.data, qty=form.qty.data)
         models.db.session.add(movement)
         models.db.session.commit()
-    return "Add Location"
+    page_title = "DuFarms - Movement"
+    return render_template("movement.html", page_title=page_title, form=form)
 
 
 @app.errorhandler(404)

@@ -1,1 +1,13 @@
 {% extends "home.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block content %}
+<div class="container">
+    <span style="display:inline-block; height: 100px"></span>
+    {{ wtf.quick_form(form) }}
+    <span style="display:inline-block; height: 50px"></span>
+</div>
+    {% block footer %}
+        {{ super() }}
+    {% endblock %}
+{% endblock %}
