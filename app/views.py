@@ -86,6 +86,25 @@ def add_location():
     return "Add Location"
 
 
+@app.route("/locations/<name>/edit", methods=["GET", "POST"])
+def edit_location(name):
+    """
+    Edit information on the requested location
+    :param name:
+    :return: location info page
+    """
+    location = models.Location.query.filter(func.lower(models.Location.name) == func.lower(name)).first()
+    if location:
+        form = AddForm(form_name="Edit Location", submit="Edit", obj=location)
+        if request.method == "POST" and form.validate_on_submit():
+            location.name = form.name.data
+            location.description = form.description.data
+            models.db.session.commit()
+        return "{}".format(location)
+    else:
+        abort(404)
+
+
 @app.route('/locations/<name>')
 def view_location(name):
     """
@@ -108,6 +127,10 @@ def view_location(name):
             outgoing = models.db.session.query(func.sum(models.ProductMovement.qty)).filter(
                 models.ProductMovement.from_location == location.id).filter(
                 models.ProductMovement.product_id == product.id).scalar()
+            if incoming is None:
+                incoming = 0
+            if outgoing is None:
+                outgoing = 0
             report[product.name] = incoming - outgoing
         return "{}".format(report)
     else:
