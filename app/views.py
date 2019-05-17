@@ -1,6 +1,6 @@
 from app import app, models
 from flask import abort, request
-from sqlalchemy import func
+import sqlalchemy as sa
 from app.forms import AddForm, ProductMovementForm
 
 
@@ -25,8 +25,12 @@ def add_product():
     form = AddForm(form_name="Add Product")
     if request.method == "POST" and form.validate_on_submit():
         product = models.Product(name=form.name.data, description=form.description.data)
-        models.db.session.add(product)
-        models.db.session.commit()
+        # Handle cases when a product's name already exists
+        try:
+            models.db.session.add(product)
+            models.db.session.commit()
+        except sa.exc.IntegrityError:
+            return "Error"
     return "Add Product"
 
 
@@ -37,13 +41,17 @@ def edit_product(name):
     :param name:
     :return: product info page
     """
-    product = models.Product.query.filter(func.lower(models.Product.name) == func.lower(name)).first()
+    product = models.Product.query.filter(sa.func.lower(models.Product.name) == sa.func.lower(name)).first()
     if product:
         form = AddForm(form_name="Edit Product", submit="Edit", obj=product)
         if request.method == "POST" and form.validate_on_submit():
             product.name = form.name.data
             product.description = form.description.data
-            models.db.session.commit()
+            # Handle cases when a product's name already exists
+            try:
+                models.db.session.commit()
+            except sa.exc.IntegrityError:
+                return "Error"
         return "{}".format(product)
     else:
         abort(404)
@@ -57,8 +65,8 @@ def view_product(name):
     :return: product info page
     """
     # Query the database for a product that matches the inputted value
-    # func.lower helps with finding the right matches regardless of the case used
-    product = models.Product.query.filter(func.lower(models.Product.name) == func.lower(name)).first()
+    # sa.func.lower helps with finding the right matches regardless of the case used
+    product = models.Product.query.filter(sa.func.lower(models.Product.name) == sa.func.lower(name)).first()
     if product:
         return "{}".format(product)
     else:
@@ -81,8 +89,12 @@ def add_location():
     form = AddForm(form_name="Add Location")
     if request.method == "POST" and form.validate_on_submit():
         location = models.Location(name=form.name.data, description=form.description.data)
-        models.db.session.add(location)
-        models.db.session.commit()
+        # Handle cases when a location's name already exists
+        try:
+            models.db.session.add(location)
+            models.db.session.commit()
+        except sa.exc.IntegrityError:
+            return "Error"
     return "Add Location"
 
 
@@ -93,13 +105,17 @@ def edit_location(name):
     :param name:
     :return: location info page
     """
-    location = models.Location.query.filter(func.lower(models.Location.name) == func.lower(name)).first()
+    location = models.Location.query.filter(sa.func.lower(models.Location.name) == sa.func.lower(name)).first()
     if location:
         form = AddForm(form_name="Edit Location", submit="Edit", obj=location)
         if request.method == "POST" and form.validate_on_submit():
             location.name = form.name.data
             location.description = form.description.data
-            models.db.session.commit()
+            # Handle cases when a location's name already exists
+            try:
+                models.db.session.commit()
+            except sa.exc.IntegrityError:
+                return "Error"
         return "{}".format(location)
     else:
         abort(404)
@@ -113,18 +129,18 @@ def view_location(name):
     :return: location info page
     """
     # Query the database for a location that matches the inputted value
-    # func.lower helps with finding the right matches regardless of the case used
-    location = models.Location.query.filter(func.lower(models.Location.name) == func.lower(name)).first()
+    # sa.func.lower helps with finding the right matches regardless of the case used
+    location = models.Location.query.filter(sa.func.lower(models.Location.name) == sa.func.lower(name)).first()
     # Ensure that location being requested for is in the database
     if location:
         products = models.Product.query.all()
         report = {}
         # Fetch the quantity remaining for each product in the provided location
         for product in products:
-            incoming = models.db.session.query(func.sum(models.ProductMovement.qty)).filter(
+            incoming = models.db.session.query(sa.func.sum(models.ProductMovement.qty)).filter(
                 models.ProductMovement.to_location == location.id).filter(
                 models.ProductMovement.product_id == product.id).scalar()
-            outgoing = models.db.session.query(func.sum(models.ProductMovement.qty)).filter(
+            outgoing = models.db.session.query(sa.func.sum(models.ProductMovement.qty)).filter(
                 models.ProductMovement.from_location == location.id).filter(
                 models.ProductMovement.product_id == product.id).scalar()
             if incoming is None:
@@ -156,10 +172,10 @@ def product_movement():
         # Except in cases where the product is coming from Abroad
         abroad = 1
         if form.from_location.data != abroad:
-            incoming = models.db.session.query(func.sum(models.ProductMovement.qty)).filter(
+            incoming = models.db.session.query(sa.func.sum(models.ProductMovement.qty)).filter(
                 models.ProductMovement.to_location == form.from_location.data).filter(
                 models.ProductMovement.product_id == form.product.data).scalar()
-            outgoing = models.db.session.query(func.sum(models.ProductMovement.qty)).filter(
+            outgoing = models.db.session.query(sa.func.sum(models.ProductMovement.qty)).filter(
                 models.ProductMovement.from_location == form.from_location.data).filter(
                 models.ProductMovement.product_id == form.product.data).scalar()
             if incoming is None:
