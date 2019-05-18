@@ -333,4 +333,5 @@ def view_movement(number):
 
 @app.errorhandler(404)
 def page_not_found(e):
-    return "Not Found", 404
+    page_title = "Page Not Found"
+    return render_template("404.html", page_title=page_title), 404
