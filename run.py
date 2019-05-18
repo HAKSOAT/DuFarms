@@ -8,6 +8,7 @@ def set_up():
     with app.app_context():
         models.db.init_app(app)
         models.db.create_all()
+        # Initialize the database with the location Abroad
         try:
             location = models.Location(name="Abroad", description="Not a warehouse")
             models.db.session.add(location)
