@@ -123,6 +123,8 @@ def edit_location(name):
     :param name:
     :return: location info page
     """
+    # Query the database for a location that matches the inputted value
+    # sa.func.lower helps with finding the right matches regardless of the case used
     location = models.Location.query.filter(sa.func.lower(models.Location.name) == sa.func.lower(name)).first()
     if location:
         form = AddForm(obj=location)
@@ -155,10 +157,10 @@ def view_location(name):
     location = models.Location.query.filter(sa.func.lower(models.Location.name) == sa.func.lower(name)).first()
     # Ensure that location being requested for is in the database
     if location:
+        # Fetch the quantity remaining for each product in the provided location
         results = models.Product.query.all()
         products = []
         quantity = []
-        # Fetch the quantity remaining for each product in the provided location
         for product in results:
             incoming = models.db.session.query(sa.func.sum(models.ProductMovement.qty)).filter(
                 models.ProductMovement.to_location == location.id).filter(
@@ -170,6 +172,7 @@ def view_location(name):
                 incoming = 0
             if outgoing is None:
                 outgoing = 0
+            # Only consider products that have been moved to the location
             if incoming > 0:
                 products.append(product)
                 quantity.append(incoming - outgoing)
@@ -206,12 +209,13 @@ def add_movement():
     form.from_location.choices = [(location.id, location.name) for location in models.Location.query.all()]
     form.to_location.choices = [(location.id, location.name) for location in models.Location.query.all()]
     if request.method == "POST" and form.validate_on_submit():
+        abroad = 1
+        # Prevent movement of products from the same location to the same location
+        if form.from_location.data == form.to_location.data:
+            flash("Failed attempt to move product to the same location", "danger")
         # Ensure that products cannot be moved more than available
         # Example: Requests to move 5 quantities if there are only 3 are to be rejected
         # Except in cases where the product is coming from Abroad
-        abroad = 1
-        if form.from_location.data == form.to_location.data:
-            flash("Failed attempt to move product to the same location", "danger")
         elif form.from_location.data != abroad:
             incoming = models.db.session.query(sa.func.sum(models.ProductMovement.qty)).filter(
                 models.ProductMovement.to_location == form.from_location.data).filter(
@@ -223,6 +227,7 @@ def add_movement():
                 incoming = 0
             if outgoing is None:
                 outgoing = 0
+
             if outgoing + form.qty.data <= incoming:
                 movement = models.ProductMovement(from_location=form.from_location.data, to_location=form.to_location.data,
                                                   description=form.description.data,
@@ -237,6 +242,7 @@ def add_movement():
                 remnant = incoming - outgoing
                 flash("Only a maximum of {} can be moved from this location".format(remnant),
                       "danger")
+        # When product is coming from abroad, checks are not needed on the quantity
         else:
             movement = models.ProductMovement(from_location=form.from_location.data, to_location=form.to_location.data,
                                               description=form.description.data,
@@ -268,12 +274,13 @@ def edit_movement(number):
         form.from_location.choices = [(location.id, location.name) for location in models.Location.query.all()]
         form.to_location.choices = [(location.id, location.name) for location in models.Location.query.all()]
         if request.method == "POST" and form.validate_on_submit():
+            abroad = 1
+            # Prevent movement of products from the same location to the same location
+            if form.from_location.data == form.to_location.data:
+                flash("Failed attempt to move product to the same location", "danger")
             # Ensure that products cannot be moved more than available
             # Example: Requests to move 5 quantities if there are only 3 are to be rejected
             # Except in cases where the product is coming from Abroad
-            abroad = 1
-            if form.from_location.data == form.to_location.data:
-                flash("Failed attempt to move product to the same location", "danger")
             elif form.from_location.data != abroad:
                 incoming = models.db.session.query(sa.func.sum(models.ProductMovement.qty)).filter(
                     models.ProductMovement.to_location == form.from_location.data).filter(
@@ -299,6 +306,7 @@ def edit_movement(number):
                     remnant = incoming - outgoing
                     flash("Only a maximum of {} can be moved from this location".format(remnant),
                           "danger")
+            # When product is coming from abroad, checks are not needed on the quantity
             else:
                 movement = models.ProductMovement(from_location=form.from_location.data,
                                                   to_location=form.to_location.data,
