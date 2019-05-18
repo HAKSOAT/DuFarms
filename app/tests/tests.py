@@ -49,7 +49,7 @@ class TestCase(unittest.TestCase):
     def test_add_existing_product(self):
         self.app.post("/products/add", data={"name": "Garri", "description": "Also known as cassava flakes"})
         response = self.app.post("/products/add", data={"name": "Garri", "description": "Also known as cassava flakes"})
-        self.assertEqual(response.data, b"Error")
+        self.assertIn("Product already exist", str(response.data))
 
     def test_edit_products_page(self):
         self.app.post("/products/add", data={"name": "Garri", "description": "Also known as cassava flakes"})
@@ -135,7 +135,7 @@ class TestCase(unittest.TestCase):
             location_result = models.Location.query.filter(models.Location.name == location_name).first()
             location_id = location_result.id
         quantity = 10
-        self.app.post("/product_movements", data={"to_location": location_id, "from_location": 1, "qty": quantity,
+        self.app.post("/movements", data={"to_location": location_id, "from_location": 1, "qty": quantity,
                                                  "description": "I need to move", "product": product_id})
         with app.app_context():
             mov_result = models.ProductMovement.query.filter(models.ProductMovement.product_id == product_id).first()
@@ -153,10 +153,10 @@ class TestCase(unittest.TestCase):
             location_result = models.Location.query.filter(models.Location.name == location_name).first()
             location_id = location_result.id
         quantity = 10
-        self.app.post("/product_movements", data={"to_location": location_id, "from_location": 1, "qty": quantity,
+        self.app.post("/movements", data={"to_location": location_id, "from_location": 1, "qty": quantity,
                                                  "description": "I need to move", "product": product_id})
 
-        self.app.post("/product_movements", data={"to_location": 3, "from_location": 2, "qty": 5,
+        self.app.post("/movements", data={"to_location": 3, "from_location": 2, "qty": 5,
                                                  "description": "I need to move too", "product": product_id})
         response = self.app.get("/locations/{}".format(location_name))
         self.assertEqual(response.data, b"{'Garri': 5}")
@@ -173,10 +173,10 @@ class TestCase(unittest.TestCase):
             location_result = models.Location.query.filter(models.Location.name == location_name).first()
             location_id = location_result.id
         quantity = 10
-        self.app.post("/product_movements", data={"to_location": location_id, "from_location": 1, "qty": quantity,
+        self.app.post("/movements", data={"to_location": location_id, "from_location": 1, "qty": quantity,
                                                  "description": "I need to move", "product": product_id})
 
-        response = self.app.post("/product_movements", data={"to_location": 3, "from_location": 2, "qty": 15,
+        response = self.app.post("/movements", data={"to_location": 3, "from_location": 2, "qty": 15,
                                                             "description": "I need to move", "product": product_id})
         self.assertEqual(response.data, b"Error")
 

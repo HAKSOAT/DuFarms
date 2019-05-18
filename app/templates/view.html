@@ -1,0 +1,66 @@
+{% extends "home.html" %}
+
+{% block content %}
+{% block popups %}
+    {{ super() }}
+{% endblock %}
+<div class="container">
+    {% if product %}
+        <h3>{{ product.name }}</h3>
+        <span style="display:inline-block; height: 30px"></span>
+        <p>{{ product.description }}</p>
+    {% elif location %}
+        <h3>{{ location.name }}</h3>
+        <span style="display:inline-block; height: 30px"></span>
+        <p>{{ location.description }}</p>
+        <span style="display:inline-block; height: 30px"></span>
+        <div class="container">
+            <table class="table">
+              <thead>
+                    <tr>
+                      <th scope="col">Product</th>
+                      <th scope="col">Location</th>
+                      <th scope="col">Quantity</th>
+                    </tr>
+              </thead>
+              <tbody>
+                <!-- not slicing through all because of the first value Abroad-->
+                {% for product, qty in products|zip(quantity) %}
+                <tr>
+                    <td><b>{{ product.name }}</b></td>
+                    <td>{{ location.name }}</td>
+                    <td>{{ qty }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+        </div>
+    {% elif movement %}
+        <h3>Movement {{ movement.id }}</h3>
+        <span style="display:inline-block; height: 30px"></span>
+        <p>{{ movement.description }}</p>
+        <span style="display:inline-block; height: 30px"></span>
+        <div class="container">
+            <table class="table">
+              <thead>
+                    <tr>
+                      <th scope="col">From</th>
+                      <th scope="col">To</th>
+                      <th scope="col">Quantity</th>
+                    </tr>
+              </thead>
+              <tbody>
+                <tr>
+                    <td><b>{{ from_location.name }}</b></td>
+                    <td>{{ to_location.name }}</td>
+                    <td>{{ movement.qty }}</td>
+                </tr>
+              </tbody>
+            </table>
+        </div>
+    {% endif %}
+</div>
+    {% block footer %}
+        {{ super() }}
+    {% endblock %}
+{% endblock %}

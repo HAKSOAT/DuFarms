@@ -1,9 +1,27 @@
 {% extends "home.html" %}
 
 {% block content %}
+{% block popups %}
+    {{ super() }}
+{% endblock %}
 <div class="container">
     <h3>Locations</h3>
     <a href="{{ url_for("add_location") }}"><button type="button" class="btn btn-success">Create</button></div></a>
+    <span style="display:inline-block; height: 50px"></span>
+    <div class="container">
+        <table class="table">
+          <tbody>
+            <!-- not slicing through all because of the first value Abroad-->
+            {% for location in locations[1:] %}
+            <tr>
+                <td><b>{{ location.name }}</b></td>
+              <td><a href="{{ url_for("edit_location", name=location.name) }}">Edit</a></td>
+              <td><a href="{{ url_for("view_location", name=location.name) }}">View</a></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+    </div>
 </div>
     {% block footer %}
         {{ super() }}

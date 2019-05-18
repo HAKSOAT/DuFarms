@@ -2,11 +2,26 @@
 {% import "bootstrap/wtf.html" as wtf %}
 
 {% block content %}
+{% block popups %}
+    {{ super() }}
+{% endblock %}
 <div class="container">
     <h3>Movements</h3>
-    <span style="display:inline-block; height: 100px"></span>
-    {{ wtf.quick_form(form) }}
+    <a href="{{ url_for("add_movement") }}"><button type="button" class="btn btn-success">Create</button></div></a>
     <span style="display:inline-block; height: 50px"></span>
+    <div class="container">
+        <table class="table">
+          <tbody>
+            {% for movement in movements[:] %}
+            <tr>
+              <td><b> Movement {{ movement.id }}</b></td>
+              <td><a href="{{ url_for("edit_movement", number=movement.id) }}">Edit</a></td>
+              <td><a href="{{ url_for("view_movement", number=movement.id) }}">View</a></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+    </div>
 </div>
     {% block footer %}
         {{ super() }}
