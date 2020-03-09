@@ -90,9 +90,3 @@ You can then view and use the application by opening `localhost:5000` on your br
 ## Author
 
 * **Habeeb Kehinde Shopeju** - [HAKSOAT](https://haksoat.github.io)
-
-
-## Contributions
-
-Contributions are welcome. Especially if you could help compile into an executable file, as I am having issues doing that.
-
